@@ -1,0 +1,12 @@
+{
+  "name": "DynamicSolitare",
+  "displayName": "DynamicSolitare",
+  "expo": {
+    "name": "DynamicSolitare",
+    "slug": "DynamicSolitare",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
