@@ -7,9 +7,13 @@ import { Container, Row, Col, Jumbotron, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './css/custom.css'
 
-const MINIMUMCARDCOUNT = 3;
+const MINIMUMCARDCOUNT = 2;
 
-const RANDOMNUMBER = (min = 0, max = 50) => {
+const SCOREFUNCTION = (input = 0) => {
+  return Math.pow(2, input)
+}
+
+const RANDOMNUMBER = (min = 0, max = 50) => { //inclusive min, exclusive max
   let num = Math.random() * (max - min) + min;
   return Math.floor(num);
 };
@@ -29,16 +33,10 @@ class App extends React.Component {
       selectedCards: ['placeholder'],
       selectedDecks: ['placeholder'],
       discard: [],
-      deckRed: ['AD', '2D','3D', '4D', '5D', '6D', '7D', '8D', 'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H'],
-      tableau1: [],
-      tableau2: [],
-      tableau3: [],
-      tableau4: [],
-      deckBlack: ['AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', 'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S'],
-      deck1: ['9H', '10C', 'JH', 'QC', 'KH'],
-      deck2: ['9C', '10H', 'JC', 'QH', 'KC'],
-      deck3: ['9D', '10S', 'JD', 'QS', 'KD'],
-      deck4: ['9S', '10D', 'JS', 'QD', 'KS'],
+      deck1: ['KH', 'QC', 'JH', '10C', '9H', 'KH'],
+      deck2: ['QC', '9C', '10H', 'JC', 'QH', 'KC'],
+      deck3: ['JS', '9D', 'KD', '10S', 'JD', 'QS', 'KD'],
+      deck4: ['9S', 'KD', '10D', 'KS', 'QD', 'KS',],
       red1: [],
       red2: [],
       red3: [],
@@ -50,16 +48,74 @@ class App extends React.Component {
     }
   }
 
+  getRedCard() {
+    var r = RANDOMNUMBER(0, 10);
+    switch (r) {
+      case 0:
+        return 'AH'
+      case 1:
+        return 'AD'
+      case 2:
+        return '2D'
+      case 3:
+        return '2H'
+      case 4:
+        return '3D'
+      case 5:
+        return '4D'
+      case 6:
+        return '5D'
+      case 7:
+        return '3H'
+      case 8:
+        return '4H'
+      case 9:
+        return '5H'
+      default:
+        return 'AH'
+    }
+  }
+
+  getBlackCard() {
+    var r = RANDOMNUMBER(0, 12);
+    console.log(r)
+    switch (r) {
+      case 0:
+      case 1:
+        return 'AC'
+      case 2:
+        return 'AS'
+      case 3:
+      case 4:
+        return '2S'
+      case 5:
+        return '2C'
+      case 6:
+        return '3S'
+      case 7:
+        return '4S'
+      case 8:
+        return '5S'
+      case 9:
+        return '3C'
+      case 10:
+        return '4C'
+      case 11:
+        return '5C'
+    }
+  }
+
   startGame() {
-    this.moveCardRandom('deckRed', 'red1')
-    this.moveCardRandom('deckRed', 'red2')
-    this.moveCardRandom('deckRed', 'red3')
-    this.moveCardRandom('deckRed', 'red4')
-    this.moveCardRandom('deckBlack', 'black1')
-    this.moveCardRandom('deckBlack', 'black2')
-    this.moveCardRandom('deckBlack', 'black3')
-    this.moveCardRandom('deckBlack', 'black4')
+    this.addRedCard('red1')
+    this.addRedCard('red2')
+    this.addRedCard('red3')
+    this.addRedCard('red4')
+    this.addBlackCard('black1')
+    this.addBlackCard('black2')
+    this.addBlackCard('black3')
+    this.addBlackCard('black4')
     this.setState({
+      matchModeState: 1,
       gameStarted: 1
     })
   }
@@ -79,22 +135,38 @@ class App extends React.Component {
     })
   }
 
-  moveCardRandom(from, to) {
-    console.log(RANDOMNUMBER)
-    console.log(RANDOMNUMBER)
-    console.log(RANDOMNUMBER)
-    var deck1 = this.state[from];
-    var deck2 = this.state[to];
-    var card = ''
-    var cardIndex = RANDOMNUMBER(0,deck1.length)
-    if (!(deck1 === undefined && deck1.length === 0)) {
-      card = deck1[cardIndex];
-      deck1.splice(cardIndex, cardIndex)
-      deck2.unshift(card)
-    }
+  addRedCard(to) {
+    var deck = this.state[to];
+    deck.unshift(this.getRedCard())
     this.setState({
-      [from]: deck1,
-      [to]: deck2
+      [to]: deck
+    })
+  }
+
+  addBlackCard(to) {
+    console.log(to)
+    var deck = this.state[to];
+    deck.unshift(this.getBlackCard())
+    this.setState({
+      [to]: deck
+    })
+  }
+
+  shuffleDeck(array) {
+    //find the deck that matches the passed in array
+    for (const [key, value] of Object.entries(this.state)) {
+      if (value == array) {
+        var deckName = key
+      }
+    }
+    //shuffle
+    for (let i = array.length - 1; i > 0; i--) {
+      const rand = Math.floor(Math.random() * (i + 1));
+      [array[i], array[rand]] = [array[rand], array[i]];
+    }
+    //replace the matching array, update the state
+    this.setState({
+      [deckName]: array
     })
   }
 
@@ -138,11 +210,11 @@ class App extends React.Component {
       console.log('cannot select a card now')
       return;
     }
-    if (this.state.selectedCards.indexOf(card) > -1) {
+    if (this.state.selectedDecks.indexOf(deck) > -1) {
       console.log('alreadySelected');
       return;
     }
-    if(card === undefined || card == ''){return;}
+    if (card === undefined || card == '') { return; }
     var suit = card.slice(-1);
     if (this.state.matchModeState === 3 && (suit == "D" || suit == "H")) {
       return;
@@ -178,7 +250,6 @@ class App extends React.Component {
       this.matchConfirmed()
     }
     else {
-      console.log(total)
       alert('match failed')
       this.resetMatchState()
     }
@@ -191,8 +262,8 @@ class App extends React.Component {
   }
 
   addScore(player) {
-    if(this.state.matchModeState != 4){return;}
-    var score = this.state.selectedCards.length - 1;
+    if (this.state.matchModeState != 4) { return; }
+    var score = SCOREFUNCTION(this.state.selectedCards.length - 1);
     if (player == 1) {
       score += this.state.player1score;
       this.setState({
@@ -206,72 +277,29 @@ class App extends React.Component {
     } else {
       return;
     }
-    this.moveToTableau()
     this.moveToDiscard()
     this.resetMatchState()
   }
 
-  moveToTableau() {
-    var tableau = this.getSuitableTableau(this.state.matchingCard);
-    this.moveCard(this.state.matchingDeck, tableau);
-  }
-
-  moveToDiscard(){
-    var decks = this.state.selectedDecks.slice(1)  
-    decks.forEach(element => this.moveCard(element,'discard'))
+  moveToDiscard() {
+    var decks = this.state.selectedDecks.slice(1)
+    decks.forEach(element => this.moveCard(element, 'discard'))
     decks.forEach(element => this.refreshPiles(element))
+    this.moveCard(this.state.matchingDeck, 'discard')
   }
 
-  refreshPiles(deck){
-    var colour = deck.slice(0,-1)
-    if(colour == 'red'){this.moveCard('deckRed',deck)}
-    if(colour == 'black'){this.moveCard('deckBlack',deck)}
+  refreshPiles(deck) {
+    var colour = deck.slice(0, -1)
+    if (colour == 'red') { this.addRedCard(deck) }
+    if (colour == 'black') { this.addBlackCard(deck) }
   }
 
-  getSuitableTableau(card) {
-    var t1 = this.state.tableau1
-    var t2 = this.state.tableau2
-    var t3 = this.state.tableau3
-    var t4 = this.state.tableau4
-    if (this.getCardValue(card) == 9) {
-      if (t1.length == 0) {
-        return 'tableau1'
-      }
-      if (t2.length == 0) {
-        return 'tableau2'
-      }
-      if (t3.length == 0) {
-        return 'tableau3'
-      }
-      if (t4.length == 0) {
-        return 'tableau4'
-      }
-    }
-    var c1 = t1[0];
-    var c2 = t2[0];
-    var c3 = t3[0];
-    var c4 = t4[0];
-    if (this.cardCheck(card, c1)) {
-      return 'tableau1'
-    }
-    if (this.cardCheck(card, c2)) {
-      return 'tableau2'
-    }
-    if (this.cardCheck(card, c3)) {
-      return 'tableau3'
-    }
-    if (this.cardCheck(card, c4)) {
-      return 'tableau4'
-    }
-    this.endGame();
-  }
-
-  endGame(){
-    if(this.state.player1score > this.state.player2score){
+  endGame() {
+    if (this.state.player1score > this.state.player2score) {
       alert('player 1 wins')
-    }else if(this.state.player2score > this.state.player1score){
+    } else if (this.state.player2score > this.state.player1score) {
       alert('player 2 wins')
-    }else{
+    } else {
       alert('tie')
     }
     window.location.reload();
@@ -291,82 +319,89 @@ class App extends React.Component {
 
   resetMatchState() {
     this.setState({
-      matchModeState: 0,
+      matchModeState: 1,
       matchingCard: "",
       selectedCards: ['placeholder'],
       selectedDecks: ['placeholder']
     })
   }
 
-  getCardValue(card){
-    if(card[0] == 'J' || card[0] == 'Q'|| card[0] == 'K' || card[0] == 'A'){
-      if(card[0] == 'J'){return 11}
-      if(card[0] == 'Q'){return 12}
-      if(card[0] == 'K'){return 13}
-      if(card[0] == 'A'){return 1}
+  getCardValue(card) {
+    if (card[0] == 'J' || card[0] == 'Q' || card[0] == 'K' || card[0] == 'A') {
+      if (card[0] == 'J') { return 11 }
+      if (card[0] == 'Q') { return 12 }
+      if (card[0] == 'K') { return 13 }
+      if (card[0] == 'A') { return 1 }
     }
-    return Number(card.slice(0,-1));
+    return Number(card.slice(0, -1));
   }
 
-  getCardSuit(card){
-    return card[card.length-1]
+  getCardSuit(card) {
+    return card[card.length - 1]
   }
 
-  getCardColour(card){
-    switch(card[card.length-1]){
-      case "C" : 
+  getCardColour(card) {
+    switch (card[card.length - 1]) {
+      case "C":
       case "S":
         return 'black'
         break;
-      return 'red';
+        return 'red';
     }
   }
 
-
-  getStopCards(){
+  getStopCards() {
     var card1 = this.state.deck1[0]
     var card2 = this.state.deck2[0]
     var card3 = this.state.deck3[0]
     var card4 = this.state.deck4[0]
-    return [card1,card2,card3,card4]
+    return [card1, card2, card3, card4]
   }
 
-  getRedPlayableCards(){
+  getRedPlayableCards() {
     var card1 = this.state.red1[0]
     var card2 = this.state.red2[0]
     var card3 = this.state.red3[0]
     var card4 = this.state.red4[0]
-    return [card1,card2,card3,card4]
+    return [card1, card2, card3, card4]
   }
 
-  getBlackPlayableCards(){
+  getBlackPlayableCards() {
     var card1 = this.state.black1[0]
     var card2 = this.state.black2[0]
     var card3 = this.state.black3[0]
     var card4 = this.state.black4[0]
-    return [card1,card2,card3,card4]
+    return [card1, card2, card3, card4]
   }
 
-  Solve(stops,reds,blacks){
-    for(var i=0;i<stops.length;i++){
+  Solve(stops, reds, blacks) {
+    for (var i = 0; i < stops.length; i++) {
       var stopCard = stops[i];
       var stopValue = this.getCardValue(stopCard)
-      console.log('stopping on '+stopValue)
-      if(this.getCardColour(stopCard) == 'red'){
-        for(var j=0;j<blacks.length;j++){
-          stopValue -= this.getCardValue(reds[j])
-          for(var k=0;k<reds.length;k++){
-            if(this.getCardValue(reds[k]) == stopValue){
-              return [stopCard,blacks[k],reds[j]]
+      console.log('stopping on ' + stopValue)
+      if (this.getCardColour(stopCard) == 'black') {
+        for (var j = 0; j < blacks.length; j++) {
+          for (var k = 0; k < reds.length; k++) {
+            if (this.getCardValue(reds[k]) + this.getCardValue(blacks[j]) == stopValue) {
+              return [stopCard, blacks[j], reds[k]]
+            }
+            for (var l = 0; l < blacks.length; l++) {
+              if (this.getCardValue(reds[k]) + this.getCardValue(blacks[j]) + this.getCardValue(blacks[l]) == stopValue) {
+                return [stopCard,blacks[j],reds[k],blacks[l]]
+              }
             }
           }
         }
-      }else if(this.getCardColour(stopCard) == 'black'){
-        for(var j=0;j<reds.length;j++){
-          stopValue -= this.getCardValue(reds[j])
-          for(var k=0;k<blacks.length;k++){
-            if(this.getCardValue(blacks[k]) == stopValue){
-              return [stopCard,blacks[k],reds[j]]
+      } else if (this.getCardColour(stopCard) == 'red') {
+        for (var j = 0; j < reds.length; j++) {
+          for (var k = 0; k < blacks.length; k++) {
+            if (this.getCardValue(blacks[k]) + this.getCardValue(reds[j]) == stopValue) {
+              return [stopCard, blacks[k], reds[j]]
+            }
+            for (var l = 0; l < reds.length; l++) {
+              if (this.getCardValue(blacks[k]) + this.getCardValue(reds[j]) + this.getCardValue(reds[l]) == stopValue) {
+                return [stopCard,reds[j],blacks[k],reds[l]]
+              }
             }
           }
         }
@@ -374,43 +409,26 @@ class App extends React.Component {
     }
   }
 
-  SecretAISolver(){
+  SecretAISolver() {
     var stopCards = this.getStopCards();
     var redPlayableCards = this.getRedPlayableCards();
     var blackPlayableCards = this.getBlackPlayableCards();
     //console.log(stopCards,redPlayableCards,blackPlayableCards)
-    var solution = this.Solve(stopCards,redPlayableCards,blackPlayableCards)
+    var solution = this.Solve(stopCards, redPlayableCards, blackPlayableCards)
     console.log(solution);
   }
 
   render() {
     return (
       <Container align="center">
-        <Jumbotron>
-          <h1>Cards</h1>
-        </Jumbotron>
-        <Row className="mb-5">
-          <Col>
-            <CardDeck cards={this.state.discard} />
+        <Row>
+          <Col className={this.state.matchModeState == 4 ? 'bordered' : null} onClick={() => this.addScore(1)}>Player 1 Score &nbsp;{this.state.player1score}</Col>
+          <Col xs={10}>
+            <Jumbotron className="span:">
+              <h1>Dynamic Solitare</h1>
+            </Jumbotron>
           </Col>
-          <Col>
-            <CardDeck cards={this.state.deckRed} />
-          </Col>
-          <Col>
-            <CardDeck cards={this.state.tableau1} />
-          </Col>
-          <Col>
-            <CardDeck cards={this.state.tableau2} />
-          </Col>
-          <Col>
-            <CardDeck cards={this.state.tableau3} />
-          </Col>
-          <Col>
-            <CardDeck cards={this.state.tableau4} />
-          </Col>
-          <Col>
-            <CardDeck cards={this.state.deckBlack} />
-          </Col>
+          <Col className={this.state.matchModeState == 4 ? 'bordered' : null} onClick={() => this.addScore(2)}>Player 2 Score &nbsp;{this.state.player2score}</Col>
         </Row>
         <Row className="mb-2">
           <Col className={this.state.matchModeState == 1 ? 'bordered' : null} onClick={() => this.getMatchCard(this.state.deck1[0], 'deck1')}>
@@ -419,6 +437,14 @@ class App extends React.Component {
           <Col className={this.state.matchModeState == 1 ? 'bordered' : null} onClick={() => this.getMatchCard(this.state.deck2[0], 'deck2')}>
             <CardDeck cards={this.state.deck2} />
           </Col>
+          <Col className={this.state.matchModeState == 1 ? 'bordered' : null} onClick={() => this.getMatchCard(this.state.deck3[0], 'deck3')}>
+            <CardDeck cards={this.state.deck3} />
+          </Col>
+          <Col className={this.state.matchModeState == 1 ? 'bordered' : null} onClick={() => this.getMatchCard(this.state.deck4[0], 'deck4')}>
+            <CardDeck cards={this.state.deck4} />
+          </Col>
+        </Row>
+        <Row className="mb-2">
           <Col className={this.state.matchModeState == 2 && this.state.selectedDecks.indexOf('red1') == -1 ? 'bordered' : null} onClick={() => this.selectMatches(this.state.red1[0], 'red1')}>
             <CardDeck cards={this.state.red1} />
           </Col>
@@ -431,15 +457,8 @@ class App extends React.Component {
           <Col className={this.state.matchModeState == 2 && this.state.selectedDecks.indexOf('red4') == -1 ? 'bordered' : null} onClick={() => this.selectMatches(this.state.red4[0], 'red4')}>
             <CardDeck cards={this.state.red4} />
           </Col>
-          <Col className={this.state.matchModeState == 4 ? 'bordered' : null} onClick={() => this.addScore(1)}>{this.state.player1score}</Col>
         </Row>
         <Row className="mb-2">
-          <Col className={this.state.matchModeState == 1 ? 'bordered' : null} onClick={() => this.getMatchCard(this.state.deck3[0], 'deck3')}>
-            <CardDeck cards={this.state.deck3} />
-          </Col>
-          <Col className={this.state.matchModeState == 1 ? 'bordered' : null} onClick={() => this.getMatchCard(this.state.deck4[0], 'deck4')}>
-            <CardDeck cards={this.state.deck4} />
-          </Col>
           <Col className={this.state.matchModeState == 3 && this.state.selectedDecks.indexOf('black1') == -1 ? 'bordered' : null} onClick={() => this.selectMatches(this.state.black1[0], 'black1')}>
             <CardDeck cards={this.state.black1} />
           </Col>
@@ -452,26 +471,24 @@ class App extends React.Component {
           <Col className={this.state.matchModeState == 3 && this.state.selectedDecks.indexOf('black4') == -1 ? 'bordered' : null} onClick={() => this.selectMatches(this.state.black4[0], 'black4')}>
             <CardDeck cards={this.state.black4} />
           </Col>
-          <Col className={this.state.matchModeState == 4 ? 'bordered' : null} onClick={() => this.addScore(2)}>{this.state.player2score}</Col>
         </Row>
         <Row>
           {this.state.gameStarted
             ? <Container>
               {this.state.matchModeState == 0
                 ? <Button className="btn btn-block" onClick={() => this.enterMatchMode()}>Create Match</Button>
-                : this.state.selectedCards.length > MINIMUMCARDCOUNT && <Button className="btn btn-block" onClick={() => this.verifyMatches()}>Submit Match</Button> 
+                : this.state.selectedCards.length > MINIMUMCARDCOUNT && <Button className="btn btn-block" onClick={() => this.verifyMatches()}>Submit Match</Button>
               }
               {this.state.matchModeState == 0 ? <Button className="btn btn-block" onClick={() => this.endGame()}>No Matches</Button> : null}
             </Container>
             : <Button className="btn btn-block" onClick={() => this.startGame()}>Start Game</Button>
           }
         </Row>
-        <Button className="btn btn-block" onClick={() => this.SecretAISolver()}>Start AI</Button>
+        {/* <br />
+        <Button className="btn btn-block" onClick={() => this.SecretAISolver()}>Start AI</Button> */}
       </Container>
     );
   }
 }
-
-//AI SOLVER ITERATIVE
 
 export default App;
