@@ -10,18 +10,6 @@ class CardDeck extends React.Component {
         super(props)
         this.deck = this.props.cards
     }
-
-    shuffleDeck (array){
-        for (let i = array.length - 1; i > 0; i--) {
-            const rand = Math.floor(Math.random() * (i + 1));
-            [array[i], array[rand]] = [array[rand], array[i]];
-        }
-    }
-
-    addCard(card){
-        this.deck.push(card);
-    }
-
     render() {
         if(this.deck[0] != null){
             return([
