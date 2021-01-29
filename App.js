@@ -7,6 +7,13 @@ import { Container, Row, Col, Jumbotron, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './css/custom.css'
 
+const MINIMUMCARDCOUNT = 3;
+
+const RANDOMNUMBER = (min = 0, max = 50) => {
+  let num = Math.random() * (max - min) + min;
+  return Math.floor(num);
+};
+
 class App extends React.Component {
 
   constructor(props) {
@@ -22,7 +29,7 @@ class App extends React.Component {
       selectedCards: ['placeholder'],
       selectedDecks: ['placeholder'],
       discard: [],
-      deckRed: ['AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', 'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H'],
+      deckRed: ['AD', '2D','3D', '4D', '5D', '6D', '7D', '8D', 'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H'],
       tableau1: [],
       tableau2: [],
       tableau3: [],
@@ -44,16 +51,14 @@ class App extends React.Component {
   }
 
   startGame() {
-    this.shuffleDeck(this.state.deckRed)
-    this.shuffleDeck(this.state.deckBlack)
-    this.moveCard('deckRed', 'red1')
-    this.moveCard('deckRed', 'red2')
-    this.moveCard('deckRed', 'red3')
-    this.moveCard('deckRed', 'red4')
-    this.moveCard('deckBlack', 'black1')
-    this.moveCard('deckBlack', 'black2')
-    this.moveCard('deckBlack', 'black3')
-    this.moveCard('deckBlack', 'black4')
+    this.moveCardRandom('deckRed', 'red1')
+    this.moveCardRandom('deckRed', 'red2')
+    this.moveCardRandom('deckRed', 'red3')
+    this.moveCardRandom('deckRed', 'red4')
+    this.moveCardRandom('deckBlack', 'black1')
+    this.moveCardRandom('deckBlack', 'black2')
+    this.moveCardRandom('deckBlack', 'black3')
+    this.moveCardRandom('deckBlack', 'black4')
     this.setState({
       gameStarted: 1
     })
@@ -74,21 +79,22 @@ class App extends React.Component {
     })
   }
 
-  shuffleDeck(array) {
-    //find the deck that matches the passed in array
-    for (const [key, value] of Object.entries(this.state)) {
-      if (value == array) {
-        var deckName = key
-      }
+  moveCardRandom(from, to) {
+    console.log(RANDOMNUMBER)
+    console.log(RANDOMNUMBER)
+    console.log(RANDOMNUMBER)
+    var deck1 = this.state[from];
+    var deck2 = this.state[to];
+    var card = ''
+    var cardIndex = RANDOMNUMBER(0,deck1.length)
+    if (!(deck1 === undefined && deck1.length === 0)) {
+      card = deck1[cardIndex];
+      deck1.splice(cardIndex, cardIndex)
+      deck2.unshift(card)
     }
-    //shuffle
-    for (let i = array.length - 1; i > 0; i--) {
-      const rand = Math.floor(Math.random() * (i + 1));
-      [array[i], array[rand]] = [array[rand], array[i]];
-    }
-    //replace the matching array, update the state
     this.setState({
-      [deckName]: array
+      [from]: deck1,
+      [to]: deck2
     })
   }
 
@@ -185,6 +191,7 @@ class App extends React.Component {
   }
 
   addScore(player) {
+    if(this.state.matchModeState != 4){return;}
     var score = this.state.selectedCards.length - 1;
     if (player == 1) {
       score += this.state.player1score;
@@ -301,6 +308,81 @@ class App extends React.Component {
     return Number(card.slice(0,-1));
   }
 
+  getCardSuit(card){
+    return card[card.length-1]
+  }
+
+  getCardColour(card){
+    switch(card[card.length-1]){
+      case "C" : 
+      case "S":
+        return 'black'
+        break;
+      return 'red';
+    }
+  }
+
+
+  getStopCards(){
+    var card1 = this.state.deck1[0]
+    var card2 = this.state.deck2[0]
+    var card3 = this.state.deck3[0]
+    var card4 = this.state.deck4[0]
+    return [card1,card2,card3,card4]
+  }
+
+  getRedPlayableCards(){
+    var card1 = this.state.red1[0]
+    var card2 = this.state.red2[0]
+    var card3 = this.state.red3[0]
+    var card4 = this.state.red4[0]
+    return [card1,card2,card3,card4]
+  }
+
+  getBlackPlayableCards(){
+    var card1 = this.state.black1[0]
+    var card2 = this.state.black2[0]
+    var card3 = this.state.black3[0]
+    var card4 = this.state.black4[0]
+    return [card1,card2,card3,card4]
+  }
+
+  Solve(stops,reds,blacks){
+    for(var i=0;i<stops.length;i++){
+      var stopCard = stops[i];
+      var stopValue = this.getCardValue(stopCard)
+      console.log('stopping on '+stopValue)
+      if(this.getCardColour(stopCard) == 'red'){
+        for(var j=0;j<blacks.length;j++){
+          stopValue -= this.getCardValue(reds[j])
+          for(var k=0;k<reds.length;k++){
+            if(this.getCardValue(reds[k]) == stopValue){
+              return [stopCard,blacks[k],reds[j]]
+            }
+          }
+        }
+      }else if(this.getCardColour(stopCard) == 'black'){
+        for(var j=0;j<reds.length;j++){
+          stopValue -= this.getCardValue(reds[j])
+          for(var k=0;k<blacks.length;k++){
+            if(this.getCardValue(blacks[k]) == stopValue){
+              return [stopCard,blacks[k],reds[j]]
+            }
+          }
+        }
+      }
+    }
+  }
+
+  SecretAISolver(){
+    var stopCards = this.getStopCards();
+    var redPlayableCards = this.getRedPlayableCards();
+    var blackPlayableCards = this.getBlackPlayableCards();
+    //console.log(stopCards,redPlayableCards,blackPlayableCards)
+    var solution = this.Solve(stopCards,redPlayableCards,blackPlayableCards)
+    console.log(solution);
+  }
+
   render() {
     return (
       <Container align="center">
@@ -377,16 +459,19 @@ class App extends React.Component {
             ? <Container>
               {this.state.matchModeState == 0
                 ? <Button className="btn btn-block" onClick={() => this.enterMatchMode()}>Create Match</Button>
-                : <Button className="btn btn-block" onClick={() => this.verifyMatches()}>Submit Match</Button> 
+                : this.state.selectedCards.length > MINIMUMCARDCOUNT && <Button className="btn btn-block" onClick={() => this.verifyMatches()}>Submit Match</Button> 
               }
               {this.state.matchModeState == 0 ? <Button className="btn btn-block" onClick={() => this.endGame()}>No Matches</Button> : null}
             </Container>
             : <Button className="btn btn-block" onClick={() => this.startGame()}>Start Game</Button>
           }
         </Row>
+        <Button className="btn btn-block" onClick={() => this.SecretAISolver()}>Start AI</Button>
       </Container>
     );
   }
 }
+
+//AI SOLVER ITERATIVE
 
 export default App;
