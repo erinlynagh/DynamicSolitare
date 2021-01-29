@@ -74,10 +74,6 @@ class App extends React.Component {
     })
   }
 
-  dealCards() {
-    console.log('lol')
-  }
-
   shuffleDeck(array) {
     //find the deck that matches the passed in array
     for (const [key, value] of Object.entries(this.state)) {
@@ -274,7 +270,6 @@ class App extends React.Component {
     window.location.reload();
   }
 
-
   cardCheck(newCard, oldCard) {
     function checkDifferentSuits(a, b) {
       if (a == 'C' || a == 'S') {
@@ -305,7 +300,7 @@ class App extends React.Component {
     }
     return Number(card.slice(0,-1));
   }
-  
+
   render() {
     return (
       <Container align="center">
